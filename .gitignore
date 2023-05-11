@@ -49,4 +49,3 @@ nosetests.xml
 /tags
 /tox.ini
 tmserver
-!.coveragerc
