@@ -1,6 +1,11 @@
 venv/
 *.py[cod]
 
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
 # C extensions
 *.so
 
@@ -35,8 +40,11 @@ nosetests.xml
 .project
 .pydevproject
 
+# IDE
+.idea/
+.vscode/
+
 # Any hidden files
-.*
 /htmlcov/
 /tags
 /tox.ini
