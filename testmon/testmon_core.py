@@ -1,33 +1,24 @@
 import hashlib
 import os
-import random
 import sys
 import sysconfig
-import textwrap
-from functools import lru_cache
 from collections import defaultdict
-from xmlrpc.client import Fault, ProtocolError
+from functools import lru_cache
 from socket import gaierror
+from xmlrpc.client import Fault, ProtocolError
 
 import pkg_resources
 import pytest
-from coverage import Coverage, CoverageData
+from coverage import Coverage
 
-from testmon import db
 from testmon import VERSION as TM_CLIENT_VERSION
-
+from testmon import db
 from testmon.common import get_logger, git_current_head
+from testmon.process_code import (Module, create_fingerprint, get_source_sha,
+                                  match_fingerprint, methods_to_checksums)
 
-from testmon.process_code import (
-    match_fingerprint,
-    create_fingerprint,
-    methods_to_checksums,
-    get_source_sha,
-    Module,
-)
-
-
-TEST_BATCH_SIZE = 250
+# set batch size to 1 to avoid multiprocessing issues
+TEST_BATCH_SIZE = 1
 
 CHECKUMS_ARRAY_TYPE = "I"
 DB_FILENAME = ".testmondata"
@@ -367,9 +358,7 @@ class TestmonCollector:
 
     def __init__(self, rootdir, testmon_labels=None, cov_plugin=None):
         try:
-            from testmon.testmon_core import (
-                Testmon as UberTestmon,
-            )
+            from testmon.testmon_core import Testmon as UberTestmon
 
             TestmonCollector.coverage_stack = UberTestmon.coverage_stack
         except ImportError:
@@ -439,7 +428,8 @@ class TestmonCollector:
                     "branch coverage is on. Please disable branch coverage."
                 )
 
-        self.cov = Coverage(data_file=self.sub_cov_file, config_file=False, **params)
+        # enable converage config
+        self.cov = Coverage(data_file=self.sub_cov_file, **params)
         self.cov._warn_no_data = False
         if TestmonCollector.coverage_stack:
             TestmonCollector.coverage_stack[-1].stop()
@@ -500,6 +490,8 @@ class TestmonCollector:
         return nodes_files_lines
 
     def get_nodes_files_lines(self, dont_include):
+        # combine coverage data (for multiprocessing)
+        self.cov.combine()
         cov_data = self.cov.get_data()
         files = cov_data.measured_files()
         nodes_files_lines = {}
@@ -511,6 +503,9 @@ class TestmonCollector:
 
             for lineno, contexts in contexts_by_lineno.items():
                 for context in contexts:
+                    # in multiprocessing mode, the context is empty, so we use the test name
+                    if context == "":
+                        context = self._test_name
                     nodes_files_lines.setdefault(context, {}).setdefault(
                         relfilename, set()
                     ).add(lineno)
