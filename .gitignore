@@ -39,6 +39,6 @@ nosetests.xml
 .*
 /htmlcov/
 /tags
-/tests/
 /tox.ini
 tmserver
+!.coveragerc
