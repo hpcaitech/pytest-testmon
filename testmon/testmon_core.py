@@ -5,6 +5,7 @@ import sysconfig
 from collections import defaultdict
 from functools import lru_cache
 from socket import gaierror
+from typing import List, Optional
 from xmlrpc.client import Fault, ProtocolError
 
 import pkg_resources
@@ -356,7 +357,7 @@ def cached_relpath(path, basepath):
 class TestmonCollector:
     coverage_stack = []
 
-    def __init__(self, rootdir, testmon_labels=None, cov_plugin=None):
+    def __init__(self, rootdir, testmon_labels=None, cov_plugin=None, cov_source: Optional[List[str]] = None):
         try:
             from testmon.testmon_core import Testmon as UberTestmon
 
@@ -376,6 +377,20 @@ class TestmonCollector:
         self.check_stack = []
         self.is_started = False
         self._interrupted_at = None
+        self.combining_cov = None
+        if cov_source is None or len(cov_source) > 0:
+            # when cov_source is empty, disable storing combined coverage data
+            self.combining_cov = Coverage(config_file=False, source=cov_source)
+
+    def start(self):
+        if self.combining_cov is not None:
+            # start at session start to record function definition
+            self.combining_cov.start()
+
+    def collection_finish(self):
+        if self.combining_cov is not None:
+            # stop before running tests, remaining coverage data will be updated from self.cov
+            self.combining_cov.stop()
 
     def start_cov(self):
         if not self.cov._started:
@@ -484,6 +499,10 @@ class TestmonCollector:
                     filtered_lines_data
                 )
 
+            if self.combining_cov is not None:
+                # update combining coverage
+                self.combining_cov.get_data().update(self.cov.get_data())
+
             self.cov.erase()
             self.cov.start()
             self.batched_test_names = set()
@@ -533,6 +552,8 @@ class TestmonCollector:
             os.remove(self.sub_cov_file + "_rc")
         os.environ.pop("COVERAGE_PROCESS_START", None)
         self.cov = None
+        if self.combining_cov is not None:
+            self.combining_cov.save()
         if TestmonCollector.coverage_stack:
             TestmonCollector.coverage_stack[-1].start()
 
