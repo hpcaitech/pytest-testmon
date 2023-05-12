@@ -103,6 +103,20 @@ def pytest_addoption(parser):
         ),
     )
 
+    group.addoption(
+        "--testmon-cov",
+        action="append",
+        default=[],
+        metavar='SOURCE',
+        nargs='?',
+        const=True,
+        dest="cov_source",
+        help=(
+            "Path or package name to measure during execution (multi-allowed)."
+            "Use --testmon-cov= to not do any source filtering and record everything."
+        ),
+    )
+
     parser.addini("environment_expression", "environment expression", default="")
     parser.addini("testmon_url", "URL of the testmon.net api server.")
     parser.addini("tmnet_api_key", "testmon api key")
@@ -179,6 +193,16 @@ def parallelism_status(config):
     return "controller"
 
 
+def _prepare_cov_source(cov_source):
+    """
+    Prepare cov_source so that:
+
+     --cov --cov=foobar is equivalent to --cov (cov_source=None)
+     --cov=foo --cov=bar is equivalent to cov_source=['foo', 'bar']
+    """
+    return None if True in cov_source else [path for path in cov_source if path is not True]
+
+
 def register_plugins(config, should_select, should_collect, cov_plugin):
     if should_select or should_collect:
         config.pluginmanager.register(
@@ -186,12 +210,14 @@ def register_plugins(config, should_select, should_collect, cov_plugin):
         )
 
     if should_collect:
+        cov_source = _prepare_cov_source(config.getoption("cov_source"))
         config.pluginmanager.register(
             TestmonCollect(
                 TestmonCollector(
                     config.rootdir.strpath,
                     testmon_labels=testmon_options(config),
                     cov_plugin=cov_plugin,
+                    cov_source=cov_source,
                 ),
                 config.testmon_data,
                 host=parallelism_status(config),
@@ -371,6 +397,12 @@ class TestmonCollect:
             )
             self.testmon_data.save_test_execution_file_fps(test_executions_fingerprints)
             self.testmon.close()
+
+    def pytest_sessionstart(self, session):
+        self.testmon.start()
+
+    def pytest_collection_finish(self, session):
+        self.testmon.collection_finish()
 
     def pytest_sessionfinish(self, session):
         if self._host in ("single", "controller"):

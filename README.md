@@ -43,3 +43,15 @@ There are some limitations:
 2. Coverage plugin is not tested. It may not work well.
 3. `pytest-xdist` is not tested. It may not work well.
 4. To set context of subprocess correctly, you need to set test batch size to 1, which may slow down the test.
+
+## Coverage report
+
+We support saving coverage data in `.coverage` file. To enable it:
+
+```shell
+pytest --testmon --testmon-cov $SOURCE tests
+```
+
+Known issues:
+1. This is not compatible with `pytest-cov`. You'd better uninstall `pytest-cov` before using this feature.
+2. If you don't specify `$SOURCE` (`pytest --testmon --testmon-cov tests`), we will use record everything. This behavior is different from `coverage.py`. Thus, we highly recommend you to specify `$SOURCE`.

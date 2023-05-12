@@ -2,7 +2,6 @@
 set -xe
 
 TEST_ROOT=$(realpath $(dirname $0))
-export PYTHONPATH=${PYTHONPATH}:${TEST_ROOT}
 
 # install requirements
 pip install -r ${TEST_ROOT}/requirements.txt
@@ -44,3 +43,21 @@ pytest --testmon ${TEST_ROOT} | grep "collected 0 items"
 
 # restore sample.py
 mv ${TEST_ROOT}/.sample.py.bak ${TEST_ROOT}/sample.py
+
+# test coverage report
+if [ -e ${TEST_ROOT}/../.coverage ]; then
+    rm ${TEST_ROOT}/../.coverage
+fi
+
+coverage run --source ${TEST_ROOT} -m pytest ${TEST_ROOT}
+coverage combine
+coverage report -m > ${TEST_ROOT}/coverage.txt
+rm ${TEST_ROOT}/../.coverage
+
+rm ${TEST_ROOT}/../.testmondata
+pytest --testmon --testmon-cov ${TEST_ROOT} ${TEST_ROOT}
+coverage report -m > ${TEST_ROOT}/coverage_with_testmon.txt
+rm ${TEST_ROOT}/../.coverage
+
+diff ${TEST_ROOT}/coverage.txt ${TEST_ROOT}/coverage_with_testmon.txt
+rm ${TEST_ROOT}/coverage.txt ${TEST_ROOT}/coverage_with_testmon.txt
