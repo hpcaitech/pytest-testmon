@@ -26,3 +26,20 @@ We would like to run testmon within your project, collect data and improve!
 We'll prepare the PR for you and set everything up so that no tests are deselected initially.
 You can start using the full functionality whenever the reliability and time savings seem right!
 Please <a href="https://testmon.org/ci.html">get in touch</a> and we'll contact you shortly.
+
+## Multiprocessing
+
+We support multiprocessing. To enable it, put this in your `.coveragerc`:
+
+```ini
+[run]
+concurrency = multiprocessing
+parallel = true
+sigterm = true
+```
+
+There are some limitations:
+1. We only tested `torch.multprocessing.spawn`. Orignal `multiprocessing` module may not work well.
+2. Coverage plugin is not tested. It may not work well.
+3. `pytest-xdist` is not tested. It may not work well.
+4. To set context of subprocess correctly, you need to set test batch size to 1, which may slow down the test.

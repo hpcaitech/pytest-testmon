@@ -1,30 +1,22 @@
-import time
-import xmlrpc.client
 import os
-
+import time
+import warnings
+import xmlrpc.client
 from collections import defaultdict
 from datetime import date, timedelta
 
-import pytest
 import pkg_resources
-
-from _pytest.config import ExitCode, Config
+import pytest
+from _pytest.config import ExitCode
 from _pytest.terminal import TerminalReporter
 
-from testmon.configure import TmConf
-
-from testmon.testmon_core import (
-    TestmonCollector,
-    eval_environment,
-    TestmonData,
-    home_file,
-    TestmonException,
-    get_test_execution_class_name,
-    get_test_execution_module_name,
-    cached_relpath,
-)
 from testmon import configure
 from testmon.common import get_logger
+from testmon.testmon_core import (TestmonCollector, TestmonData,
+                                  TestmonException, cached_relpath,
+                                  eval_environment,
+                                  get_test_execution_class_name,
+                                  get_test_execution_module_name, home_file)
 
 SURVEY_NOTIFICATION_INTERVAL = timedelta(days=28)
 
@@ -211,9 +203,7 @@ def register_plugins(config, should_select, should_collect, cov_plugin):
 def pytest_configure(config):
     coverage_stack = None
     try:
-        from tmnet.testmon_core import (
-            Testmon as UberTestmon,
-        )
+        from tmnet.testmon_core import Testmon as UberTestmon
 
         coverage_stack = UberTestmon.coverage_stack
     except ImportError:
@@ -221,6 +211,8 @@ def pytest_configure(config):
 
     cov_plugin = None
     cov_plugin = config.pluginmanager.get_plugin("_cov")
+    if cov_plugin:
+        warnings.warn("Coverage plugin is not tested in multi-process mode.")
 
     tm_conf = configure.header_collect_select(
         config, coverage_stack, cov_plugin=cov_plugin
@@ -310,7 +302,7 @@ def pytest_unconfigure(config):
 
 
 class TestmonCollect:
-    def __init__(self, testmon, testmon_data, host="single", cov_plugin=None):
+    def __init__(self, testmon: TestmonCollector, testmon_data: TestmonData, host="single", cov_plugin=None):
         self.testmon_data = testmon_data
         self.testmon = testmon
         self._host = host
