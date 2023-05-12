@@ -20,16 +20,24 @@ pytest --testmon ${TEST_ROOT} | grep "collected 4 items"
 # second run, all tests should be skipped
 pytest --testmon ${TEST_ROOT} | grep "collected 0 items"
 
-for i in 1 2 3 4; do
+
+REPLACE_CMDS=(
+    's/return self.rank/return self.rank + 1 - 1/'
+    's/return self.world_size/return self.world_size + 1 - 1/'
+    's/print("echo1")/print("call echo1")/'
+    's/print("echo2")/print("call echo2")/'
+)
+
+for cmd in "${REPLACE_CMDS[@]}"; do
     # modify a method, one test should be run
-    cp ${TEST_ROOT}/sample${i}.py ${TEST_ROOT}/sample.py
+    sed -i "${cmd}" ${TEST_ROOT}/sample.py
     pytest --testmon ${TEST_ROOT} | grep "collected 2 items / 1 deselected / 1 selected"
     # second run, all tests should be skipped
     pytest --testmon ${TEST_ROOT} | grep "collected 0 items"
 done
 
 # modify init, all tests should be run
-cp ${TEST_ROOT}/sample5.py ${TEST_ROOT}/sample.py
+sed -i 's/self.rank = rank/self.rank = rank + 1 - 1/' ${TEST_ROOT}/sample.py
 pytest --testmon ${TEST_ROOT} | grep "collected 4 items"
 # second run, all tests should be skipped
 pytest --testmon ${TEST_ROOT} | grep "collected 0 items"
