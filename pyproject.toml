@@ -35,6 +35,7 @@ classifiers = [
 dependencies = [
     "pytest>=5,<8",
     "coverage>=6,<8",
+    "requirements-parser",
 ]
 
 [tool.setuptools]
