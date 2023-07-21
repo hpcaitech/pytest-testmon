@@ -61,3 +61,6 @@ rm ${TEST_ROOT}/../.coverage
 
 diff ${TEST_ROOT}/coverage.txt ${TEST_ROOT}/coverage_with_testmon.txt
 rm ${TEST_ROOT}/coverage.txt ${TEST_ROOT}/coverage_with_testmon.txt
+
+export PYTHONPATH=${TEST_ROOT}/../
+python ${TEST_ROOT}/check_pkg_change.py
