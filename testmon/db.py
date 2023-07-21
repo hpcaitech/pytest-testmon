@@ -1,12 +1,12 @@
 import json
 import os
 import sqlite3
-
 from collections import namedtuple
 from functools import lru_cache
 
 from testmon.process_code import blob_to_checksums, checksums_to_blob
 
+from .utils import environment_exist, parse_requirements
 
 DATA_VERSION = 9
 
@@ -623,13 +623,26 @@ class DB:
                     ),
                 )
                 environment_id = cursor.lastrowid
-                count = cursor.execute(
-                    """
-                    SELECT count(*) as count FROM environment WHERE environment_name = ?
-                    """,
-                    (environment_name,),
-                ).fetchone()
-                packages_changed = count["count"] > 1
+
+                core_pkg_file = os.environ.get("TESTMON_CORE_PKGS", None)
+                if core_pkg_file:
+                    environments = con.execute(
+                        'SELECT system_packages, python_version FROM environment WHERE environment_name = ? AND id != ?', (environment_name, environment_id)).fetchall()
+                    if len(environments) == 0:
+                        # it's the first environment
+                        packages_changed = False
+                    else:
+                        core_pkgs = parse_requirements(core_pkg_file)
+                        packages_changed = not environment_exist(
+                            (system_packages, python_version), environments, include_packages=core_pkgs)
+                else:
+                    count = cursor.execute(
+                        """
+                        SELECT count(*) as count FROM environment WHERE environment_name = ?
+                        """,
+                        (environment_name,),
+                    ).fetchone()
+                    packages_changed = count["count"] > 1
             except sqlite3.IntegrityError:
                 environment = con.execute(
                     """

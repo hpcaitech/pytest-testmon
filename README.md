@@ -55,3 +55,8 @@ pytest --testmon --testmon-cov $SOURCE tests
 Known issues:
 1. This is not compatible with `pytest-cov`. You'd better uninstall `pytest-cov` before using this feature.
 2. If you don't specify `$SOURCE` (`pytest --testmon --testmon-cov tests`), we will use record everything. This behavior is different from `coverage.py`. Thus, we highly recommend you to specify `$SOURCE`.
+
+
+## Environment variables
+
+`TESTMON_CORE_PKGS`: when dectecting package changes, it will only include packages in this list. E.g. `TESTMON_CORE_PKGS=requirements.txt,requirements-dev.txt`, it will only include packages in `requirements.txt` and `requirements-dev.txt`.
