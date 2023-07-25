@@ -29,8 +29,10 @@ def parse_requirements(requirements_file: str) -> List[str]:
     requirements_file_list = requirements_file.split(',')
     pkgs = set()
     for file in requirements_file_list:
+        print(f'Parsing requirements file: {file}')
         with open(file) as f:
             for req in requirements.parse(f):
+                print(f'Adding package: {req.name}')
                 pkgs.add(req.name.lower().replace('-', '_'))
     return sorted(pkgs)
 
