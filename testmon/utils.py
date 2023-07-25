@@ -33,7 +33,8 @@ def parse_requirements(requirements_file: str) -> List[str]:
         with open(file) as f:
             for req in requirements.parse(f):
                 print(f'Adding package: {req.name}')
-                pkgs.add(req.name.lower().replace('-', '_'))
+                if req.name:
+                    pkgs.add(req.name.lower().replace('-', '_'))
     return sorted(pkgs)
 
 
