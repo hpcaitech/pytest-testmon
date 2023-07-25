@@ -1,6 +1,3 @@
-import argparse
-import os
-import sqlite3
 from typing import List, Optional, Tuple
 
 import requirements
