@@ -615,7 +615,6 @@ class DB:
                     core_pkgs = parse_requirements(core_pkg_file)
                     system_packages = extract_core_pkg_str(
                         system_packages, core_pkgs)
-                print(system_packages)
                 cursor = con.cursor()
                 cursor.execute(
                     """
