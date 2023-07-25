@@ -258,6 +258,9 @@ class TestmonData:
 
         self.stable_test_names = set(self.all_tests) - self.unstable_test_names
         self.stable_files = set(self.all_files) - self.unstable_files
+        print(f'all files: {self.all_files}')
+        print(f'stable files: {self.stable_files}')
+        print(f'unstable files: {self.unstable_files}')
 
     def assert_old_determin_stable(self, new_fingerprint_misses):
         filenames_fingerprints = self.db.filenames_fingerprints(self.exec_id)
