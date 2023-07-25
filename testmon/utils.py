@@ -1,6 +1,3 @@
-import argparse
-import os
-import sqlite3
 from typing import List, Optional, Tuple
 
 import requirements
@@ -31,7 +28,8 @@ def parse_requirements(requirements_file: str) -> List[str]:
     for file in requirements_file_list:
         with open(file) as f:
             for req in requirements.parse(f):
-                pkgs.add(req.name.lower().replace('-', '_'))
+                if req.name:
+                    pkgs.add(req.name.lower().replace('-', '_'))
     return sorted(pkgs)
 
 
